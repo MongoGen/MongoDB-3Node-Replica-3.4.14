@@ -3,25 +3,14 @@ INSTALL
 cd /home/mongo/MongoGEN
 
 Replica Setup 
-./install-replica.run
+./MongoGen-Replication.run
 
 
 S3METETA UTILITIES
 mdisksize         - MongoDB Datbase size check
 mconnection       - Number of connection checking
-mopplog           - MongoDB Replica Opplog Status
 mstart            - MongoDB Instance Start
 mstop             - MongoDB Instance Stop
 mstart            - MongoDB Instance Restart
 mrepstatus        - MongoDB Replica Status
 mpriority         - MongoDB Replica Priority Status
-MUNINSTALL        - MongoDB Instance uninstall
-mcreateuser       - MongoDB User Create
-mdump             - MongoDB Instance Backup
-mrestore          - MongoDB Instance Restore
-mdumpDB           - MongoDB Database Backup
-mDBrestore        - MongoDB Database Restore
-mcoldump          - MongoDB Collection Backup
-mcolrestore       - MongoDB Collection Backup
-mpitrbackup       - MongoDB Point Time Backup
-mpitrrestore      - MongoDB Point Time Recovery
