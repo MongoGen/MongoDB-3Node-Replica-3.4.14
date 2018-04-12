@@ -1,0 +1,69 @@
+Replication
+
+On this page
+
+Redundancy and Data Availability
+Replication in MongoDB
+Asynchronous Replication
+Automatic Failover
+Read Operations
+
+Additional Features
+A replica set in MongoDB is a group of mongod processes that maintain the same data set. Replica sets provide redundancy and high availability, and are the basis for all production deployments. This section introduces replication in MongoDB as well as the components and architecture of replica sets. The section also provides tutorials for common tasks related to replica sets.
+
+Redundancy and Data Availability
+
+Replication provides redundancy and increases data availability. With multiple copies of data on different database servers, replication provides a level of fault tolerance against the loss of a single database server.
+
+In some cases, replication can provide increased read capacity as clients can send read operations to different servers. Maintaining copies of data in different data centers can increase data locality and availability for distributed applications. You can also maintain additional copies for dedicated purposes, such as disaster recovery, reporting, or backup.
+
+Replication in MongoDB
+
+A replica set is a group of mongod instances that maintain the same data set. A replica set contains several data bearing nodes and optionally one arbiter node. Of the data bearing nodes, one and only one member is deemed the primary node, while the other nodes are deemed secondary nodes.
+
+The primary node receives all write operations. A replica set can have only one primary capable of confirming writes with { w: "majority" } write concern; although in some circumstances, another mongod instance may transiently believe itself to also be primary. [1] The primary records all changes to its data sets in its operation log, i.e. oplog. For more information on primary node operation, see Replica Set Primary.
+
+Diagram of default routing of reads and writes to the primary.
+The secondaries replicate the primaryâs oplog and apply the operations to their data sets such that the secondariesâ data sets reflect the primaryâs data set. If the primary is unavailable, an eligible secondary will hold an election to elect itself the new primary. For more information on secondary members, see Replica Set Secondary Members.
+
+Diagram of a 3 member replica set that consists of a primary and two secondaries.
+You may add an extra mongod instance to a replica set as an arbiter. Arbiters do not maintain a data set. The purpose of an arbiter is to maintain a quorum in a replica set by responding to heartbeat and election requests by other replica set members. Because they do not store a data set, arbiters can be a good way to provide replica set quorum functionality with a cheaper resource cost than a fully functional replica set member with a data set. If your replica set has an even number of members, add an arbiter to obtain a majority of votes in an election for primary. Arbiters do not require dedicated hardware. For more information on arbiters, see Replica Set Arbiter.
+
+Diagram of a replica set that consists of a primary, a secondary, and an arbiter.
+An arbiter will always be an arbiter whereas a primary may step down and become a secondary and a secondary may become the primary during an election.
+
+Asynchronous Replication
+
+Secondaries apply operations from the primary asynchronously. By applying operations after the primary, sets can continue to function despite the failure of one or more members. For more information on replication mechanics, see Replica Set Oplog and Replica Set Data Synchronization.
+
+Automatic Failover
+
+When a primary does not communicate with the other members of the set for more than 10 seconds, an eligible secondary will hold an election to elect itself the new primary. The first secondary to hold an election and receive a majority of the membersâ votes becomes primary.
+
+New in version 3.2: MongoDB introduces a version 1 of the replication protocol (protocolVersion: 1) to reduce replica set failover time and accelerates the detection of multiple simultaneous primaries. New replica sets will, by default, use protocolVersion: 1. Previous versions of MongoDB use version 0 of the protocol.
+
+Diagram of an election of a new primary. In a three member replica set with two secondaries, the primary becomes unreachable. The loss of a primary triggers an election where one of the secondaries becomes the new primary
+Although the timing varies, the failover process generally completes within a minute. For instance, it may take 10-30 seconds for the members of a replica set to declare a primary inaccessible (see electionTimeoutMillis). One of the remaining secondaries holds an election to elect itself as a new primary. The election itself may take another 10-30 seconds.
+
+Changed in version 3.2: Starting in MongoDB 3.2, with the replication election enhancements, MongoDB reduces replica set failover time. See replication election enhancements for details.
+
+See Replica Set Elections and Rollbacks During Replica Set Failover for more information.
+
+Read Operations
+
+By default, clients read from the primary [1]; however, clients can specify a read preference to send read operations to secondaries. Asynchronous replication to secondaries means that reads from secondaries may return data that does not reflect the state of the data on the primary. For information on reading from replica sets, see Read Preference.
+
+In MongoDB, clients can see the results of writes before the writes are durable:
+
+Regardless of write concern, other clients using "local" or "available" readConcern can see the result of a write operation before the write operation is acknowledged to the issuing client.
+Clients using "local" or "available" readConcern can read data which may be subsequently rolled back.
+For more information on read isolations, consistency and recency for MongoDB, see Read Isolation, Consistency, and Recency.
+
+Additional Features
+
+Replica sets provide a number of options to support application needs. For example, you may deploy a replica set with members in multiple data centers, or control the outcome of elections by adjusting the members[n].priority of some members. Replica sets also support dedicated members for reporting, disaster recovery, or backup functions.
+
+See Priority 0 Replica Set Members, Hidden Replica Set Members and Delayed Replica Set Members for more information.
+
+[1]	(1, 2) In some circumstances, two nodes in a replica set may transiently believe that they are the primary, but at most, one of them will be able to complete writes with { w: "majority" } write concern. The node that can complete { w: "majority" } writes is the current primary, and the other node is a former primary that has not yet recognized its demotion, typically due to a network partition. When this occurs, clients that connect to the former primary may observe stale data despite having requested read preference primary, and new writes to the former primary will eventually roll back.
+
